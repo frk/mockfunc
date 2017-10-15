@@ -146,17 +146,20 @@ func Mock(fvar interface{}) *Func {
 	return F
 }
 
-func (f *Func) Want(fc *CallArgs) error {
-	if err := f.validargs(fc); err != nil {
+func (f *Func) Want(a *Args) error {
+	if a == nil {
+		return nil
+	}
+	if err := f.validargs(a); err != nil {
 		return err
 	}
-	f.expected = append(f.expected, fc.in)
-	f.fakeout = append(f.fakeout, fc.out)
+	f.expected = append(f.expected, a.in)
+	f.fakeout = append(f.fakeout, a.out)
 	return nil
 }
 
-func (f *Func) MustWant(fc *CallArgs) {
-	if err := f.Want(fc); err != nil {
+func (f *Func) MustWant(a *Args) {
+	if err := f.Want(a); err != nil {
 		panic(err)
 	}
 }
@@ -190,7 +193,7 @@ func (f *Func) Check() error {
 			want := exp.Interface()
 			got := act.Interface()
 			if !reflect.DeepEqual(want, got) {
-				errlist.Add(&BadFuncArgValueError{
+				errlist.Add(&BadFuncArgError{
 					fname: f.name, i: i, j: j, want: want, got: got})
 			}
 
@@ -220,33 +223,34 @@ func (f *Func) Done() error {
 	return nil
 }
 
-// The validargs method checks whether the CallArgs' types match the types
-// of the mocked function's actual arguments and return values.
-func (f *Func) validargs(fc *CallArgs) error {
-	if fc.in != nil { // check only if expected input was specified
-		if len1, len2 := f.rtyp.NumIn(), len(fc.in); len1 != len2 {
-			return &BadCallArgsNumError{
+// The validargs method checks whether the Args' input and ouput types match
+// the types of the mocked function's actual arguments and return values.
+func (f *Func) validargs(a *Args) error {
+	if a.in != nil { // check only if expected input was specified
+		if len1, len2 := f.rtyp.NumIn(), len(a.in); len1 != len2 {
+			return &BadArgsNumError{
 				fname: f.name, want: len1, got: len2}
 		}
 	}
-	if fc.out != nil { // check only if fake output was specified
-		if len1, len2 := f.rtyp.NumOut(), len(fc.out); len1 != len2 {
-			return &BadCallArgsNumError{
+	if a.out != nil { // check only if fake output was specified
+		if len1, len2 := f.rtyp.NumOut(), len(a.out); len1 != len2 {
+			return &BadArgsNumError{
 				fname: f.name, want: len1, got: len2, out: true}
 		}
 	}
 
-	if err := f.validargtypes(fc.in, f.rtyp.In, false); err != nil {
+	if err := f.validtypes(a.in, f.rtyp.In, false); err != nil {
 		return err
 	}
-	if err := f.validargtypes(fc.out, f.rtyp.Out, true); err != nil {
+	if err := f.validtypes(a.out, f.rtyp.Out, true); err != nil {
 		return err
 	}
 	return nil
 }
 
-// validargtypes is a helper that compares CallArgs contents against the actual func's input/output types.
-func (f *Func) validargtypes(args []reflect.Value, argtype func(int) reflect.Type, out bool) error {
+// The validtypes method is a helper that compares Args' contents against
+// the original func's input/output types.
+func (f *Func) validtypes(args []reflect.Value, argtype func(int) reflect.Type, out bool) error {
 	for i, v := range args {
 		typ := argtype(i)
 		if !v.IsValid() {
@@ -255,7 +259,7 @@ func (f *Func) validargtypes(args []reflect.Value, argtype func(int) reflect.Typ
 		}
 		if w, g := typ, v.Type(); w != g {
 			if !g.ConvertibleTo(w) {
-				return &BadCallArgsTypeError{
+				return &BadArgsTypeError{
 					fname: f.name,
 					i:     i,
 					want:  w,
@@ -287,42 +291,42 @@ func (f *Func) reset() {
 	f.actual = nil
 }
 
-// The CallArgs type is used to specify the expected input to a function call
-// as well as a fake output from the same function call.
+// The Args type is used to specify the expected input to a function call
+// as well as the fake output from the same function call.
 //
-// CallArgs without fake output, that is, those that are created with func In
-// without calling the Out method afterwards will cause the mock to call the
-// original function to retrieve and return the output.
+// Args without the fake output, that is, one that was created with the In func
+// and without calling the Out method afterwards will cause the mock to pass the
+// actual arguments to the original function and retrieve and return its' output.
 //
-// CallArgs wihtout expected input, that is, those that are created with
-// func Out will cause the mock to skip comparing the actual input.
-type CallArgs struct {
+// Args wihtout the expected input, that is, one that was created with the Out
+// func will cause the mock to skip comparing the actual input values.
+type Args struct {
 	in  []reflect.Value
 	out []reflect.Value
 }
 
-// In allocates and returns a new CallArgs instance with the given values
+// In allocates and returns a new Args instance with the given values
 // set as the expected input to a function call.
-func In(vs ...interface{}) *CallArgs {
-	fc := &CallArgs{}
+func In(vs ...interface{}) *Args {
+	a := &Args{}
 	for _, v := range vs {
-		fc.in = append(fc.in, reflect.ValueOf(v))
+		a.in = append(a.in, reflect.ValueOf(v))
 	}
-	return fc
+	return a
 }
 
-// Out allocates and returns a new CallArgs instance with the given values
+// Out allocates and returns a new Args instance with the given values
 // set as the fake output from a function call.
-func Out(vs ...interface{}) *CallArgs {
-	return (&CallArgs{}).Out(vs...)
+func Out(vs ...interface{}) *Args {
+	return (&Args{}).Out(vs...)
 }
 
 // Out appends the given values to the receiver's fake output.
-func (fc *CallArgs) Out(vs ...interface{}) *CallArgs {
+func (a *Args) Out(vs ...interface{}) *Args {
 	for _, v := range vs {
-		fc.out = append(fc.out, reflect.ValueOf(v))
+		a.out = append(a.out, reflect.ValueOf(v))
 	}
-	return fc
+	return a
 }
 
 // testname returns the package path-qualified function name of

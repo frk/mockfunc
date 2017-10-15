@@ -12,7 +12,7 @@ func TestMock(t *testing.T) {
 	defer fm.Done()
 
 	tests := []struct {
-		args *CallArgs
+		args *Args
 		in   string
 	}{{
 		args: In("hello").Out(123332, nil),
