@@ -3,18 +3,34 @@ package mockfunc
 import (
 	"fmt"
 	"testing"
-	//"github.com/frk/mockfunc/xyz"
 )
 
-func TestF1(t *testing.T) {
+func TestMock(t *testing.T) {
 	fmt.Println(Foobar(""))
 
 	fm := Mock(&Foobar)
-	fm.Want(Call("hello").Out(777, fmt.Errorf("sdfsd")))
+	defer fm.Done()
 
-	fmt.Println(Foobar(""))
+	tests := []struct {
+		args *CallArgs
+		in   string
+	}{{
+		args: In("hello").Out(123332, nil),
+		in:   "hello",
+	}, {
+		args: In("calipso").Out(-888, fmt.Errorf("sdfsd")),
+		in:   "calipso 2",
+	}}
 
-	fm.Done()
+	for _, tt := range tests {
+		if err := fm.Want(tt.args); err != nil {
+			t.Error(err)
+		}
 
-	fmt.Println(Foobar(""))
+		Foobar(tt.in)
+
+		if err := fm.Check(); err != nil {
+			t.Error(err)
+		}
+	}
 }
