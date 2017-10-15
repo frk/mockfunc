@@ -20,6 +20,9 @@ func TestMock(t *testing.T) {
 	}, {
 		args: In("calipso").Out(-888, fmt.Errorf("sdfsd")),
 		in:   "calipso 2",
+	}, {
+		args: Out(-888, fmt.Errorf("sdfsd")),
+		in:   "calipso 3",
 	}}
 
 	for _, tt := range tests {

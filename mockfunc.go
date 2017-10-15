@@ -174,6 +174,10 @@ func (f *Func) Check() error {
 
 	errlist := &ErrorList{}
 	for i, expected := range f.expected {
+		if expected == nil {
+			// skip comparison if no expected input was specified
+			continue
+		}
 
 		actual := f.actual[i]
 		if elen, alen := len(expected), len(actual); elen != alen {

@@ -15,9 +15,6 @@ const (
 	stopColor   = "\033[0m"
 )
 
-const callargsnumerr = "frk/mockfunc: %q %s (CallArgs)" +
-	" specified with wrong number of arguments; want %s, got %s."
-
 type BadCallArgsNumError struct {
 	fname     string
 	want, got int
@@ -25,18 +22,17 @@ type BadCallArgsNumError struct {
 }
 
 func (e *BadCallArgsNumError) Error() string {
+	const text = "frk/mockfunc: %q %s (CallArgs)" +
+		" specified with wrong number of arguments; want %s, got %s."
+
 	call := "In"
 	if e.out {
 		call = "Out"
 	}
-
 	want := fmt.Sprintf("%s%d%s", yellowColor, e.want, stopColor)
 	got := fmt.Sprintf("%s%d%s", yellowColor, e.got, stopColor)
-	return fmt.Sprintf(callargsnumerr, e.fname, call, want, got)
+	return fmt.Sprintf(text, e.fname, call, want, got)
 }
-
-const callargstyperr = "frk/mockfunc: %q %s (CallArgs)" +
-	" %s argument has wrong type; want %s, got %s."
 
 type BadCallArgsTypeError struct {
 	fname     string
@@ -46,19 +42,18 @@ type BadCallArgsTypeError struct {
 }
 
 func (e *BadCallArgsTypeError) Error() string {
+	const text = "frk/mockfunc: %q %s (CallArgs)" +
+		" %s argument has wrong type; want %s, got %s."
+
 	call := "In"
 	if e.out {
 		call = "Out"
 	}
-
 	ith := fmt.Sprintf("%s#%d%s", yellowColor, e.i, stopColor)
 	want := fmt.Sprintf("%s%v%s", cyanColor, e.want, stopColor)
 	got := fmt.Sprintf("%s%v%s", cyanColor, e.got, stopColor)
-	return fmt.Sprintf(callargstyperr, e.fname, call, ith, want, got)
+	return fmt.Sprintf(text, e.fname, call, ith, want, got)
 }
-
-const funccallnumerr = "frk/mockfunc: Inconsistent number of calls to %q;" +
-	" want %s, got %s."
 
 type BadFuncCallNumError struct {
 	fname     string
@@ -66,13 +61,13 @@ type BadFuncCallNumError struct {
 }
 
 func (e *BadFuncCallNumError) Error() string {
+	const text = "frk/mockfunc: Inconsistent number of calls to %q;" +
+		" want %s, got %s."
+
 	want := fmt.Sprintf("%s%d%s", yellowColor, e.want, stopColor)
 	got := fmt.Sprintf("%s%d%s", yellowColor, e.got, stopColor)
-	return fmt.Sprintf(funccallnumerr, e.fname, want, got)
+	return fmt.Sprintf(text, e.fname, want, got)
 }
-
-const funcargnumerr = "frk/mockfunc: Inconsistent number of arguments passed" +
-	" to the %s call of %q; want %s, got %s."
 
 type BadFuncArgNumError struct {
 	fname        string
@@ -80,14 +75,14 @@ type BadFuncArgNumError struct {
 }
 
 func (e *BadFuncArgNumError) Error() string {
+	const text = "frk/mockfunc: Inconsistent number of arguments passed" +
+		" to the %s call of %q; want %s, got %s."
+
 	calln := fmt.Sprintf("%s#%d%s", yellowColor, e.i, stopColor)
 	want := fmt.Sprintf("%s%d%s", yellowColor, e.want, stopColor)
 	got := fmt.Sprintf("%s%d%s", yellowColor, e.got, stopColor)
-	return fmt.Sprintf(funccallnumerr, calln, e.fname, want, got)
+	return fmt.Sprintf(text, calln, e.fname, want, got)
 }
-
-const funcargvalerr = "frk/mockfunc: Unexpected %s argument value passed" +
-	" to the %s call of %q; want %s, got %s."
 
 type BadFuncArgValueError struct {
 	fname     string
@@ -96,11 +91,14 @@ type BadFuncArgValueError struct {
 }
 
 func (e *BadFuncArgValueError) Error() string {
+	const text = "frk/mockfunc: Unexpected %s argument value passed" +
+		" to the %s call of %q; want %s, got %s."
+
 	argn := fmt.Sprintf("%s#%d%s", yellowColor, e.j, stopColor)
 	calln := fmt.Sprintf("%s#%d%s", yellowColor, e.i, stopColor)
 	want := fmt.Sprintf("%s%v%s", cyanColor, e.want, stopColor)
 	got := fmt.Sprintf("%s%v%s", cyanColor, e.got, stopColor)
-	return fmt.Sprintf(funcargvalerr, argn, calln, e.fname, want, got)
+	return fmt.Sprintf(text, argn, calln, e.fname, want, got)
 }
 
 type ErrorList struct {
